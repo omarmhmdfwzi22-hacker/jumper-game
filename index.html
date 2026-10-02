@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>Doodle Jump Game Original - Free to Play!</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Play Doodle Jump for free online in HTML5." />
+  
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="manifest" href="doodle-jump.json" />
+  
+  <link rel="stylesheet" type="text/css" href="css/core-game-site.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.css" />
+
+  <style>
+    .ad { color: white; overflow: hidden; }
+    .top-nav { display: flex; gap: 15px; align-items: center; justify-content: center; background-color: rgba(0,0,0,.5); border-radius: 10px; padding: 0 10px; color: #f5deb3; font-size: 13px; }
+    .top-nav a { text-decoration: none; color: white; font-weight: bold; }
+    .top-nav a:hover { color: #58a6ff; }
+    .zoom { transition: transform .2s; }
+    .zoom:hover { transform: scale(1.2); }
+  </style>
+</head>
+<body>
+  <h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Doodle Jump</h1>
+  
+  <aside>
+    <div id="full-screen-game-div-button">
+      <nav class="top-nav">
+        <a class="zoom" onclick="showInfo()" href="#">v2.0.2 🫶</a>
+        <a class="zoom" href="#">HTML5</a>
+        <div class="zoom" id="fullscreen-btn" onclick="fullScreenMode()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+            <path fill="#fff" d="M24 9h-2v-5h-7v-2h9v7zm-9 13v-2h7v-5h2v7h-9zm-15-7h2v5h7v2h-9v-7zm9-13v2h-7v5h-2v-7h9z" />
+          </svg>
+        </div>
+      </nav>
+    </div>
+  </aside>
+
+  <label style="display:none">Highscore<input id="highscore" type="text" /></label>
+  <div id="virtual-key" class="keyboard">
+    <button id="left-btn">&lt; </button>
+    <button id="right-btn">&gt;</button>
+  </div>
+
+  <script src="js/screenfull.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.6.2/phaser.min.js"></script>
+  
+  <script src="js/fulltilt.min.js"></script>
+  <script src="js/doodle.min.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener("keydown", keyDownHandler, false);
+    function keyDownHandler(keypress) {
+      if (keypress.key == "f" && screenfull.isEnabled) {
+        screenfull.toggle();
+      }
+    }
+
+    function fullScreenMode() {
+      if (screenfull.isEnabled) {
+        screenfull.toggle();
+      } else {
+        alert("Full screen mode is not supported on this device.");
+      }
+    }
+
+    showInfo = () => {
+      new Notify({
+        status: 'info',
+        title: 'How to play Doodle Jump?',
+        text: 'To play Doodle Jump simply move left to right to reach the platforms. Left-click to shoot ✌',
+        effect: 'fade',
+        speed: 300,
+        showIcon: true,
+        showCloseButton: true,
+        autoclose: true,
+        autotimeout: 10000,
+        gap: 20,
+        distance: 20,
+        type: 1,
+        position: 'center'
+      });
+    }
+  </script>
+</body>
+</html>
