@@ -67,47 +67,6 @@
     }
     .zoom { transition: transform .2s; }
     .zoom:hover { transform: scale(1.15); }
-
-    #virtual-key {
-      position: fixed;
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      padding: 0 24px;
-      pointer-events: none;
-    }
-    #virtual-key button {
-      pointer-events: auto;
-      background: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-radius: 50%;
-      width: 56px;
-      height: 56px;
-      font-size: 26px;
-      font-weight: bold;
-      line-height: 50px;
-      cursor: pointer;
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-      transition: background 0.15s, transform 0.1s;
-    }
-    #virtual-key button:active {
-      background: rgba(91, 168, 41, 0.7);
-      transform: scale(0.95);
-    }
-    @media (pointer: fine) {
-      #virtual-key {
-        display: none;
-      }
-    }
   </style>
 </head>
 <body>
@@ -132,10 +91,6 @@
   </aside>
 
   <label style="display:none">Highscore<input id="highscore" type="text" /></label>
-  <div id="virtual-key" class="keyboard">
-    <button id="left-btn" aria-label="Move Left">&lt;</button>
-    <button id="right-btn" aria-label="Move Right">&gt;</button>
-  </div>
 
   <!-- Change Player Name Modal -->
   <div id="name-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(3px);">
@@ -166,7 +121,6 @@
         localStorage.setItem("DJ_Doodle_name", newName);
       } catch (e) {}
 
-      // Update in Doodle game state
       if (window.Doodle && Doodle.game && Doodle.game.state) {
         const currentState = Doodle.game.state.getCurrentState();
         if (currentState) {
@@ -258,13 +212,13 @@
       new Notify({
         status: 'info',
         title: 'How to play Doodle Jump?',
-        text: 'Move left and right (Arrow keys or < > buttons) to land on platforms. Left-click/tap to shoot. Press Escape or "Menu" to return to the start screen.',
+        text: 'اسحب إصبعك يميناً ويساراً على شاشة الموبايل لتحريك اللاعب، أو استخدم الأسهم على الكمبيوتر. انقر للشوت!',
         effect: 'fade',
         speed: 300,
         showIcon: true,
         showCloseButton: true,
         autoclose: true,
-        autotimeout: 10000,
+        autotimeout: 8000,
         gap: 20,
         distance: 20,
         type: 1,
@@ -272,25 +226,110 @@
       });
     };
 
-    // Virtual touch buttons binding
-    function bindVirtualKey(btnId, keyCode) {
-      const btn = document.getElementById(btnId);
-      if (!btn) return;
-      const setKey = (isDown) => {
-        if (window.Doodle && Doodle.game && Doodle.game.input && Doodle.game.input.keyboard) {
-          const keys = Doodle.game.input.keyboard._keys;
-          if (keys && keys[keyCode]) {
-            keys[keyCode].isDown = isDown;
-            keys[keyCode].isUp = !isDown;
+    // Mobile Touch Drag & Swipe Steering Controller (التحكم بالسحب)
+    (function initTouchDragController() {
+      let touchStartX = null;
+      let isDragging = false;
+      let activeTouchId = null;
+
+      function setSteer(direction) {
+        window.touchSteer = direction;
+        if (window.Doodle && Doodle.game && Doodle.game.state) {
+          const s = Doodle.game.state.getCurrentState();
+          if (s && s.cursors) {
+            if (direction === -1) {
+              s.cursors.left.isDown = true;
+              s.cursors.right.isDown = false;
+              s.cursors.left.isUp = false;
+              s.cursors.right.isUp = true;
+            } else if (direction === 1) {
+              s.cursors.right.isDown = true;
+              s.cursors.left.isDown = false;
+              s.cursors.right.isUp = false;
+              s.cursors.left.isUp = true;
+            } else {
+              s.cursors.left.isDown = false;
+              s.cursors.right.isDown = false;
+              s.cursors.left.isUp = true;
+              s.cursors.right.isUp = true;
+            }
           }
         }
-      };
-      btn.addEventListener('touchstart', (e) => { e.preventDefault(); setKey(true); }, { passive: false });
-      btn.addEventListener('touchend', (e) => { e.preventDefault(); setKey(false); }, { passive: false });
-      btn.addEventListener('mousedown', () => setKey(true));
-      btn.addEventListener('mouseup', () => setKey(false));
-      btn.addEventListener('mouseleave', () => setKey(false));
-    }
+      }
+
+      window.addEventListener('touchstart', (e) => {
+        if (e.target.closest('aside') || e.target.closest('#name-modal')) return;
+        const t = e.changedTouches[0];
+        activeTouchId = t.identifier;
+        touchStartX = t.clientX;
+        isDragging = true;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        let touch = null;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === activeTouchId) {
+            touch = e.changedTouches[i];
+            break;
+          }
+        }
+        if (!touch) return;
+
+        const maxDrag = 35; // Responsive anchor deadzone for snappy direction reversals
+        let diff = touch.clientX - touchStartX;
+        if (diff > maxDrag) touchStartX = touch.clientX - maxDrag;
+        if (diff < -maxDrag) touchStartX = touch.clientX + maxDrag;
+
+        const currentDiff = touch.clientX - touchStartX;
+        const threshold = 7;
+
+        if (currentDiff > threshold) {
+          setSteer(1); // Right
+        } else if (currentDiff < -threshold) {
+          setSteer(-1); // Left
+        } else {
+          setSteer(0);
+        }
+      }, { passive: true });
+
+      function endTouch(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        touchStartX = null;
+        activeTouchId = null;
+        setSteer(0);
+      }
+
+      window.addEventListener('touchend', endTouch, { passive: true });
+      window.addEventListener('touchcancel', endTouch, { passive: true });
+
+      // Mouse drag steering for testing in desktop responsive mode
+      let isMouseDown = false;
+      let mouseStartX = 0;
+      window.addEventListener('mousedown', (e) => {
+        if (e.target.closest('aside') || e.target.closest('#name-modal')) return;
+        isMouseDown = true;
+        mouseStartX = e.clientX;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        const maxDrag = 35;
+        let diff = e.clientX - mouseStartX;
+        if (diff > maxDrag) mouseStartX = e.clientX - maxDrag;
+        if (diff < -maxDrag) mouseStartX = e.clientX + maxDrag;
+        const currentDiff = e.clientX - mouseStartX;
+        if (currentDiff > 7) setSteer(1);
+        else if (currentDiff < -7) setSteer(-1);
+        else setSteer(0);
+      });
+      window.addEventListener('mouseup', () => {
+        if (isMouseDown) {
+          isMouseDown = false;
+          setSteer(0);
+        }
+      });
+    })();
 
     window.addEventListener('load', () => {
       try {
@@ -298,11 +337,6 @@
         const badge = document.getElementById("top-name-badge");
         if (badge) badge.textContent = saved;
       } catch (e) {}
-
-      if (window.Phaser && Phaser.Keyboard) {
-        bindVirtualKey('left-btn', Phaser.Keyboard.LEFT);
-        bindVirtualKey('right-btn', Phaser.Keyboard.RIGHT);
-      }
     });
   </script>
 </body>

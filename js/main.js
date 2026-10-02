@@ -4,22 +4,15 @@
   s.textContent = 'body > canvas {' +
     'display: block !important;' +
     'position: relative !important;' +
-    'left: 50% !important;' +
-    'margin-left: 0 !important;' +
-    'margin-right: 0 !important;' +
-    'transform: translateX(-50%) !important;' +
-  '}' +
-  '@media (max-width: 650px), (orientation: portrait) {' +
-    'body > canvas {' +
-      'position: fixed !important;' +
-      'top: 0 !important;' +
-      'left: 0 !important;' +
-      'width: 100vw !important;' +
-      'height: 100vh !important;' +
-      'height: 100dvh !important;' +
-      'margin: 0 !important;' +
-      'transform: none !important;' +
-    '}' +
+    'margin: auto !important;' +
+    'transform: none !important;' +
+    'max-width: 100vw !important;' +
+    'max-height: 100vh !important;' +
+    'max-height: 100dvh !important;' +
+    'width: min(100vw, calc(100vh * (635 / 955))) !important;' +
+    'height: min(100vh, calc(100vw * (955 / 635))) !important;' +
+    'box-shadow: 0 4px 25px rgba(0, 0, 0, 0.18) !important;' +
+    'border-radius: 6px !important;' +
   '}';
   (document.head || document.documentElement).appendChild(s);
 })();
