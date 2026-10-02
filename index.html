@@ -3,7 +3,7 @@
 <head>
   <title>Doodle Jump Game Original - Free to Play!</title>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="description" content="Play Doodle Jump for free online in HTML5." />
   
   <link rel="shortcut icon" href="favicon.ico" />
@@ -16,7 +16,7 @@
     .ad { color: white; overflow: hidden; }
     aside {
       position: fixed;
-      top: 8px;
+      top: calc(8px + env(safe-area-inset-top, 0px));
       left: 0;
       right: 0;
       z-index: 100;
@@ -70,7 +70,7 @@
 
     #virtual-key {
       position: fixed;
-      bottom: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       left: 0;
       right: 0;
       z-index: 100;
@@ -94,6 +94,7 @@
       touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
       backdrop-filter: blur(4px);
       box-shadow: 0 4px 10px rgba(0,0,0,0.6);
       transition: background 0.15s, transform 0.1s;
