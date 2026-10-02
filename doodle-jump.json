@@ -1,15 +1,26 @@
 {
+  "id": "doodle-jump-pwa",
   "short_name": "Doodle Jump",
-  "name": "Doodle Jump",
-  "description": "Play the classic Doodle Jump game online. No fuss. 100% free.",
+  "name": "Doodle Jump Original",
+  "description": "Play the classic Doodle Jump game online or offline as a mobile app.",
   "icons": [
-    { "src": "images/doodle-jump-game-icon-192.png", "type": "image/png", "sizes": "192x192" },
-    { "src": "images/doodle-jump-game-icon-512.png", "type": "image/png", "sizes": "512x512" }
+    {
+      "src": "images/doodle-jump-game-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/doodle-jump-game-icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
   ],
-  "start_url": "/?utm_source=pwa",
-  "scope": "/",
-  "background_color": "#0e0e0e",
-  "theme_color": "#0e0e0e",
-  "display": "fullscreen",
+  "start_url": "./?utm_source=pwa",
+  "scope": "./",
+  "background_color": "#f7f2e7",
+  "theme_color": "#5ba829",
+  "display": "standalone",
   "orientation": "portrait"
 }
