@@ -26,13 +26,13 @@
     }
     .top-nav {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       justify-content: center;
       background-color: rgba(20, 20, 20, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      padding: 6px 16px;
+      padding: 6px 14px;
       color: #f5deb3;
       font-size: 13px;
       backdrop-filter: blur(6px);
@@ -51,6 +51,19 @@
     }
     .nav-play-btn:hover {
       background: #6dc432 !important;
+    }
+    .nav-name-badge {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-name-badge:hover {
+      background: rgba(255, 255, 255, 0.22);
     }
     .zoom { transition: transform .2s; }
     .zoom:hover { transform: scale(1.15); }
@@ -104,7 +117,10 @@
       <nav class="top-nav">
         <a class="zoom nav-play-btn" onclick="startGameNow(); return false;" href="#" title="Start Game">▶ Play</a>
         <a class="zoom" onclick="goToMenu(); return false;" href="#" title="Main Menu">🏠 Menu</a>
-        <a class="zoom" onclick="showInfo(); return false;" href="#" title="Help">ℹ️ How to Play</a>
+        <a class="zoom nav-name-badge" onclick="openNameModal(); return false;" href="#" title="Click to Change Name">
+          <span>👤</span><span id="top-name-badge" style="font-weight:bold; color:#ffeaa7;">Doodler</span><span style="font-size:11px; opacity:0.8;">✏️</span>
+        </a>
+        <a class="zoom" onclick="showInfo(); return false;" href="#" title="Help">ℹ️</a>
         <div class="zoom" id="fullscreen-btn" onclick="fullScreenMode()" title="Toggle Fullscreen" style="cursor:pointer; display:flex; align-items:center;">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
             <path fill="#fff" d="M24 9h-2v-5h-7v-2h9v7zm-9 13v-2h7v-5h2v7h-9zm-15-7h2v5h7v2h-9v-7zm9-13v2h-7v5h-2v-7h9z" />
@@ -120,6 +136,19 @@
     <button id="right-btn" aria-label="Move Right">&gt;</button>
   </div>
 
+  <!-- Change Player Name Modal -->
+  <div id="name-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(3px);">
+    <div style="background:#fffcf2; border:3px solid #333; border-radius:18px; padding:24px 28px; width:90%; max-width:380px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.8); font-family:'Segoe UI', Tahoma, Arial, sans-serif;">
+      <h3 style="margin-top:0; color:#1a1a1a; font-size:22px; font-weight:bold;">تغيير اسم اللاعب / Change Name</h3>
+      <p style="color:#666; font-size:14px; margin-bottom:12px;">سيظهر اسمك مباشرة فوق شخصية اللعبة 🦘</p>
+      <input id="custom-name-input" type="text" maxlength="15" placeholder="اكتب اسمك هنا..." style="width:100%; padding:12px; font-size:18px; font-weight:bold; border:2px solid #5ba829; border-radius:10px; box-sizing:border-box; text-align:center; outline:none; background:#fff; margin-bottom:16px;" onkeydown="if(event.key==='Enter') saveCustomName(); if(event.key==='Escape') closeNameModal();" />
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button onclick="saveCustomName()" style="background:#5ba829; color:white; border:none; padding:10px 22px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; box-shadow:0 3px 8px rgba(91,168,41,0.4);">حفظ / Save</button>
+        <button onclick="closeNameModal()" style="background:#777; color:white; border:none; padding:10px 18px; font-size:16px; border-radius:8px; cursor:pointer;">إلغاء / Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/screenfull.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.6.2/phaser.min.js"></script>
@@ -129,6 +158,67 @@
   <script src="js/main.js"></script>
 
   <script>
+    function updatePlayerName(newName) {
+      if (!newName || !newName.trim()) return;
+      newName = newName.trim().slice(0, 15);
+      try {
+        localStorage.setItem("DJ_Doodle_name", newName);
+      } catch (e) {}
+
+      // Update in Doodle game state
+      if (window.Doodle && Doodle.game && Doodle.game.state) {
+        const currentState = Doodle.game.state.getCurrentState();
+        if (currentState) {
+          currentState.name = newName;
+          if (currentState.gameOverStats) {
+            currentState.gameOverStats.text = "your name:" + newName;
+          }
+          if (currentState.playerNameLabel) {
+            currentState.playerNameLabel.text = newName;
+          }
+          if (currentState.setScoreName !== undefined && currentState.localTopScores && currentState.localTopScores[currentState.setScoreName]) {
+            currentState.localTopScores[currentState.setScoreName][0] = newName;
+            try { localStorage.setItem("DJ_localTopScores", JSON.stringify(currentState.localTopScores)); } catch(e){}
+          }
+        }
+      }
+      const badge = document.getElementById("top-name-badge");
+      if (badge) badge.textContent = newName;
+    }
+
+    window.openNameModal = function() {
+      let currentName = "Doodler";
+      try {
+        currentName = localStorage.getItem("DJ_Doodle_name") || "Doodler";
+      } catch (e) {}
+      const modal = document.getElementById("name-modal");
+      const input = document.getElementById("custom-name-input");
+      if (modal && input) {
+        input.value = currentName;
+        modal.style.display = "flex";
+        setTimeout(() => {
+          input.focus();
+          input.select();
+        }, 60);
+      } else {
+        const n = prompt("اكتب اسمك / Enter your name:", currentName);
+        if (n) updatePlayerName(n);
+      }
+    };
+
+    window.closeNameModal = function() {
+      const modal = document.getElementById("name-modal");
+      if (modal) modal.style.display = "none";
+    };
+
+    window.saveCustomName = function() {
+      const input = document.getElementById("custom-name-input");
+      if (input && input.value) {
+        updatePlayerName(input.value);
+      }
+      closeNameModal();
+    };
+
     function startGameNow() {
       if (window.Doodle && Doodle.game && Doodle.game.state) {
         Doodle.game.state.start('Game');
@@ -143,6 +233,7 @@
 
     document.addEventListener("keydown", keyDownHandler, false);
     function keyDownHandler(keypress) {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
       if (keypress.key === "f" && screenfull.isEnabled) {
         screenfull.toggle();
       }
@@ -201,6 +292,12 @@
     }
 
     window.addEventListener('load', () => {
+      try {
+        const saved = localStorage.getItem("DJ_Doodle_name") || "Doodler";
+        const badge = document.getElementById("top-name-badge");
+        if (badge) badge.textContent = saved;
+      } catch (e) {}
+
       if (window.Phaser && Phaser.Keyboard) {
         bindVirtualKey('left-btn', Phaser.Keyboard.LEFT);
         bindVirtualKey('right-btn', Phaser.Keyboard.RIGHT);
